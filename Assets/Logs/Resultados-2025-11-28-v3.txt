@@ -1,0 +1,63 @@
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+2; Muralha da China; Alvo; 0,5; 0,75; 0; 0
+3; Pedregulho; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+2; Muralha da China; Alvo; 0,5; 0,75; 0; 0
+3; Pedregulho; Alvo; 0,5; 0,75; 0; 0
+4; Árvore solitária; Alvo; 0,6; 0,75; 0; 0
+5; Muralha da China; Alvo; 0,6; 0,75; 0; 0
+6; Pedregulho; Alvo; 0,6; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+2; Muralha da China; Alvo; 0,5; 0,75; 0; 0
+3; Pedregulho; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+2; Muralha da China; Alvo; 0,5; 0,75; 0; 0
+3; Pedregulho; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+2; Muralha da China; Alvo; 0,5; 0,75; 0; 0
+3; Pedregulho; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+2; Muralha da China; Alvo; 0,5; 0,75; 0; 0
+3; Pedregulho; Alvo; 0,5; 0,75; 0; 0
+4; Árvore solitária; Alvo; 0,6; 0,75; 0; 0
+5; Muralha da China; Alvo; 0,6; 0,75; 0; 0
+6; Pedregulho; Alvo; 0,6; 0,75; 0; 0
+7; Árvore solitária; Alvo; 0,75; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+2; Muralha da China; Alvo; 0,5; 0,75; 0; 0
+3; Pedregulho; Alvo; 0,5; 0,75; 0; 0
+4; Árvore solitária; Alvo; 0,6; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+2; Muralha da China; Alvo; 0,5; 0,75; 0; 0
+3; Pedregulho; Alvo; 0,5; 0,75; 0; 0
+4; Árvore solitária; Alvo; 0,6; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+2; Muralha da China; Alvo; 0,5; 0,75; 0; 0
+3; Pedregulho; Alvo; 0,5; 0,75; 0; 0
+4; Árvore solitária; Alvo; 0,6; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 21,53602; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 23,81502; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 10,96595; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 10,96595; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 23,81502; 0
+1; Árvore solitária; Alvo; 0,5; 0,75; 0,00; 0,0000
+2; Muralha da China; Alvo; 0,5; 0,75; 0,00; 0,0000
+3; Pedregulho; Alvo; 0,5; 0,75; 0,00; 0,0000
+1; Árvore solitária; Alvo; 0,5; 0,75; 0,00; 0,0000

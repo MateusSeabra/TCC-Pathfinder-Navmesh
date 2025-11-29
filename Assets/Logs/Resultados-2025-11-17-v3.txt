@@ -1,0 +1,3 @@
+1; Árvore solitária; Alvo; 0,5; 0,75; 0; 0
+2; Muralha da China; Alvo; 0,5; 0,75; 0; 0
+3; Pedregulho; Alvo; 0,5; 0,75; 0; 0
