@@ -1,21 +1,25 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
+using System.Linq; 
 
 public class NavNode
 {
     public int PolygonIndex;
     public Vector3 Center;
-    public List<int> Neighbours;
+    public List<int> Neighbours; 
+
+    public Vector3[] Vertices;
 
     public float PheromoneBias { get; set; }
     public List<int> VisitasProximas { get; set; }
     public bool IsPath { get; set; }
 
-    public NavNode(int index, Vector3 center)
+    public NavNode(int index, Vector3 center, Vector3[] vertices)
     {
         PolygonIndex = index;
         Center = center;
+        Vertices = vertices;
         Neighbours = new List<int>();
 
         PheromoneBias = 1.0f;
@@ -27,8 +31,22 @@ public class NavNode
 public class NavGraphController : MonoBehaviour
 {
     public static NavGraphController Instance;
-
     public Dictionary<int, NavNode> Graph;
+
+    private struct EdgeKey
+    {
+        public readonly int V1;
+        public readonly int V2;
+
+        public EdgeKey(int v1, int v2)
+        {
+            if (v1 < v2) { V1 = v1; V2 = v2; }
+            else { V1 = v2; V2 = v1; }
+        }
+
+        public override bool Equals(object obj) => obj is EdgeKey other && V1 == other.V1 && V2 == other.V2;
+        public override int GetHashCode() => (V1 * 397) ^ V2; 
+    }
 
     private void Awake()
     {
@@ -50,9 +68,11 @@ public class NavGraphController : MonoBehaviour
 
         if (triangulation.vertices.Length == 0)
         {
-            Debug.LogError("ERRO CRÍTICO: Falha ao ler NavMesh. A NavMesh foi 'assada' (baked)? A superfície existe?");
+            Debug.LogError("ERRO CRÍTICO: NavMesh vazia. Faça o 'Bake' da NavMesh antes de rodar.");
             return;
         }
+
+        Dictionary<EdgeKey, List<int>> edgeMap = new Dictionary<EdgeKey, List<int>>();
 
         for (int i = 0; i < triangulation.indices.Length / 3; i++)
         {
@@ -67,99 +87,89 @@ public class NavGraphController : MonoBehaviour
             Vector3 center = (v1 + v2 + v3) / 3f;
             int polygonIndex = i;
 
-            Graph.Add(polygonIndex, new NavNode(polygonIndex, center));
+            Graph.Add(polygonIndex, new NavNode(polygonIndex, center, new Vector3[] { v1, v2, v3 }));
+
+            RegisterEdge(edgeMap, i1, i2, polygonIndex);
+            RegisterEdge(edgeMap, i2, i3, polygonIndex);
+            RegisterEdge(edgeMap, i3, i1, polygonIndex);
         }
 
-        Debug.Log($"Passo 1 Concluído: {Graph.Count} nós criados.");
+        Debug.Log($"Passo 1: {Graph.Count} nós criados.");
 
         int totalConexoes = 0;
-        foreach (var node in Graph.Values)
-        {
-            foreach (var otherNode in Graph.Values)
-            {
-                if (node == otherNode) continue;
 
-                if (Vector3.Distance(node.Center, otherNode.Center) < 2.0f)
+        foreach (var entry in edgeMap)
+        {
+            List<int> sharedPolys = entry.Value;
+
+            if (sharedPolys.Count == 2)
+            {
+                int nodeA = sharedPolys[0];
+                int nodeB = sharedPolys[1];
+
+                NavNode nA = Graph[nodeA];
+                NavNode nB = Graph[nodeB];
+
+                if (!nA.Neighbours.Contains(nodeB))
                 {
-                    if (!node.Neighbours.Contains(otherNode.PolygonIndex))
-                    {
-                        node.Neighbours.Add(otherNode.PolygonIndex);
-                        totalConexoes++;
-                    }
-                    if (!otherNode.Neighbours.Contains(node.PolygonIndex))
-                    {
-                        otherNode.Neighbours.Add(node.PolygonIndex);
-                        totalConexoes++;
-                    }
+                    nA.Neighbours.Add(nodeB);
+                    nB.Neighbours.Add(nodeA);
+                    totalConexoes += 2; 
                 }
             }
         }
 
         float mediaVizinhos = Graph.Count > 0 ? (float)totalConexoes / Graph.Count : 0;
+        Debug.Log($"Passo 2: {totalConexoes} conexões geradas via Topologia Real.");
+        Debug.Log($"Média de Vizinhos: {mediaVizinhos:F2} (Ideal ~3.0 para malhas triangulares)");
 
-        Debug.Log($"Passo 2 Concluído: {totalConexoes} conexões estabelecidas.");
-        Debug.Log($"ESTATÍSTICAS DO GRAFO: Média de Vizinhos por Nó: {mediaVizinhos:F2}");
-
-        if (mediaVizinhos < 1.0f)
-        {
-            Debug.LogError("ALERTA DE FALHA: O grafo está altamente desconectado (Média < 1.0). " +
-                           "Os agentes provavelmente não encontrarão caminho. " +
-                           "Tente aumentar a distância de conexão ou verificar a escala da NavMesh.");
-        }
-        else if (mediaVizinhos < 2.0f)
-        {
-            Debug.LogWarning("AVISO: Conectividade baixa (Média < 2.0). Caminhos podem ser limitados.");
-        }
-        else
-        {
-            Debug.Log("<color=green>SUCESSO: Grafo construído com boa conectividade.</color>");
-        }
+#if UNITY_EDITOR
+        DebugDrawGraph();
+#endif
     }
 
-    public NavNode GetNode(int polygonIndex)
+    private void RegisterEdge(Dictionary<EdgeKey, List<int>> map, int v1, int v2, int polyIndex)
     {
-        NavNode node;
-        if (Graph.TryGetValue(polygonIndex, out node))
+        EdgeKey key = new EdgeKey(v1, v2);
+        if (!map.ContainsKey(key))
         {
-            return node;
+            map[key] = new List<int>();
         }
-        Debug.LogWarning($"Tentativa de acessar nó inexistente ID: {polygonIndex}");
-        return null;
+        map[key].Add(polyIndex);
+    }
+
+    public Vector3[] ConvertNodesToPath(List<NavNode> nodes)
+    {
+        if (nodes == null || nodes.Count == 0) return null;
+
+        return nodes.Select(n => n.Center).ToArray();
     }
 
     public NavNode GetNodeFromWorldPos(Vector3 worldPos)
     {
-        if (Graph.Count == 0)
-        {
-            Debug.LogError("Tentando buscar nó em um Grafo Vazio! Certifique-se de chamar BuildGraphFromNavMesh primeiro.");
-            return null;
-        }
+        if (Graph.Count == 0) return null;
 
         NavMeshHit hit;
-
-        if (NavMesh.SamplePosition(worldPos, out hit, 10.0f, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(worldPos, out hit, 5.0f, NavMesh.AllAreas))
         {
             NavNode closestNode = null;
-            float minDistance = float.MaxValue;
+            float minSqrDist = float.MaxValue; 
 
             foreach (var node in Graph.Values)
             {
-                float dist = Vector3.Distance(node.Center, hit.position);
-                if (dist < minDistance)
+                if (Mathf.Abs(node.Center.x - hit.position.x) > 10f ||
+                    Mathf.Abs(node.Center.z - hit.position.z) > 10f) continue;
+
+                float sqrDist = (node.Center - hit.position).sqrMagnitude;
+                if (sqrDist < minSqrDist)
                 {
-                    minDistance = dist;
+                    minSqrDist = sqrDist;
                     closestNode = node;
                 }
-            }
-
-            if (closestNode == null)
-            {
-                Debug.LogWarning($"Nenhum nó encontrado próximo a {worldPos} (SamplePosition funcionou, mas busca interna falhou).");
             }
             return closestNode;
         }
 
-        Debug.LogError($"Falha ao projetar posição {worldPos} na NavMesh. O ponto está muito longe da malha ou fora dela?");
         return null;
     }
 
@@ -168,17 +178,28 @@ public class NavGraphController : MonoBehaviour
         float total = 0;
         float qtdCell = 0;
 
-        foreach (KeyValuePair<int, NavNode> nodeEntry in Graph)
+        foreach (var node in Graph.Values)
         {
-            NavNode node = nodeEntry.Value;
-
             if (node.IsPath)
             {
                 total += node.VisitasProximas.Count;
                 qtdCell++;
             }
         }
-
         return qtdCell > 0 ? total / qtdCell : 0;
+    }
+
+    private void DebugDrawGraph()
+    {
+        foreach (var node in Graph.Values)
+        {
+            foreach (var neighborId in node.Neighbours)
+            {
+                if (Graph.TryGetValue(neighborId, out NavNode neighbor))
+                {
+                    Debug.DrawLine(node.Center, neighbor.Center, Color.cyan, 10.0f); 
+                }
+            }
+        }
     }
 }
