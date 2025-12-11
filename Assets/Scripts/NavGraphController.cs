@@ -145,6 +145,15 @@ public class NavGraphController : MonoBehaviour
         return nodes.Select(n => n.Center).ToArray();
     }
 
+    public NavNode GetNode(int id)
+    {
+        if (Graph.TryGetValue(id, out NavNode node))
+        {
+            return node;
+        }
+        return null;
+    }
+
     public NavNode GetNodeFromWorldPos(Vector3 worldPos)
     {
         if (Graph.Count == 0) return null;

@@ -1187,9 +1187,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1710787592}
-  - component: {fileID: 1710787591}
-  - component: {fileID: 1710787593}
+  - component: {fileID: 1710787597}
+  - component: {fileID: 1710787596}
+  - component: {fileID: 1710787595}
   - component: {fileID: 1710787594}
+  - component: {fileID: 1710787593}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -1197,18 +1199,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1710787591
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1710787590}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8c7f03c9f71e994b9f9d57634a7315f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1710787592
 Transform:
   m_ObjectHideFlags: 0
@@ -1233,9 +1223,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 1710787590}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3389cd66373c69a47ac88657c7e4fa1a, type: 3}
+  m_Script: {fileID: 11500000, guid: 944ec1407bd27f343bb4298bb6763c19, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::SimulationController
+  _scenarioGenerator: {fileID: 1710787596}
+  _pathfinder: {fileID: 1710787595}
+  _logger: {fileID: 1710787594}
+  agentDrawerPrefab: {fileID: 2067088559070557789, guid: 3a9ff3a6ce0e7d14ea6cf1b3c2373b73,
+    type: 3}
+  visualizerContainer: {fileID: 924649435}
+  mapNameText: {fileID: 1907928159}
+  biasNameText: {fileID: 1471315584}
+  capNameText: {fileID: 1554950591}
+  lengthNameText: {fileID: 1993330611}
 --- !u!114 &1710787594
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1245,28 +1245,60 @@ MonoBehaviour:
   m_GameObject: {fileID: 1710787590}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b196e752d74099b49b9bd12bdc8a546c, type: 3}
+  m_Script: {fileID: 11500000, guid: 7c396ff7067450b489037a25a367716c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
-  biasName: {fileID: 1471315584}
-  capName: {fileID: 1554950591}
-  lengthName: {fileID: 1993330611}
-  mapName: {fileID: 1907928159}
-  GroundSurface: {fileID: 269320253}
-  ObstaclePrefab: {fileID: 1376677421528883611, guid: 3139f1d5bf4a0d24e8ef0f09ef78d422,
+  m_EditorClassIdentifier: Assembly-CSharp::TestLogger
+  logFolderPath: Assets/Logs/
+  filePrefix: Resultados-
+  versionSuffix: -v3
+--- !u!114 &1710787595
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1710787590}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 786ba116936614143b428eb8263db35c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Pathfinder
+  BiasFactor: 0.75
+  BiasCap: 0.5
+  maxIterations: 50000
+--- !u!114 &1710787596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1710787590}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f65457947454df45a73bfe19e782d48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScenarioGenerator
+  groundSurface: {fileID: 269320253}
+  obstaclePrefab: {fileID: 1376677421528883611, guid: 3139f1d5bf4a0d24e8ef0f09ef78d422,
     type: 3}
-  ObstacleContainer: {fileID: 1680870309}
-  MarkerContainer: {fileID: 924649434}
-  StartPointPrefab: {fileID: 3407234321436986706, guid: 66c654dc414ecb94986c37a91c7ba558,
+  startPointPrefab: {fileID: 3407234321436986706, guid: 66c654dc414ecb94986c37a91c7ba558,
     type: 3}
-  EndPointPrefab: {fileID: 7569592345167937902, guid: 2164b370dbcb63e47881bf2ce9b68e2f,
+  endPointPrefab: {fileID: 7569592345167937902, guid: 2164b370dbcb63e47881bf2ce9b68e2f,
     type: 3}
-  DebugMark: {fileID: 8806094665596428254, guid: 81dba7c466e4db24691f9fc856fdd97b,
-    type: 3}
-  DebugPathMark: {fileID: 8806094665596428254, guid: c3b57cc965a21294e8669257772c9698,
-    type: 3}
-  MainCamera: {fileID: 519420028}
-  BiasFactor: 0.95
+  obstacleContainer: {fileID: 1680870310}
+  markerContainer: {fileID: 924649435}
+--- !u!114 &1710787597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1710787590}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8c7f03c9f71e994b9f9d57634a7315f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NavGraphController
 --- !u!1 &1907928157
 GameObject:
   m_ObjectHideFlags: 0

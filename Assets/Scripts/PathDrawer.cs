@@ -2,7 +2,7 @@
 using UnityEngine.AI;
 
 [RequireComponent(typeof(LineRenderer))]
-public class NavMeshPathDrawer : MonoBehaviour
+public class PathDrawer : MonoBehaviour
 {
     [Header("Component References")]
     [Tooltip("Referência automática ao LineRenderer.")]
@@ -28,7 +28,7 @@ public class NavMeshPathDrawer : MonoBehaviour
 
         if (lRenderer == null)
         {
-            Debug.LogError($"[NavMeshPathDrawer] ERRO CRÍTICO: LineRenderer ausente no objeto '{gameObject.name}'. Desativando script.");
+            Debug.LogError($"[PathDrawer] ERRO CRÍTICO: LineRenderer ausente no objeto '{gameObject.name}'. Desativando script.");
             this.enabled = false;
             return;
         }
@@ -92,7 +92,7 @@ public class NavMeshPathDrawer : MonoBehaviour
 
         if (status == NavMeshPathStatus.PathInvalid)
         {
-            Debug.LogWarning($"[NavMeshPathDrawer] Caminho ID {id} é INVÁLIDO/INACESSÍVEL.");
+            Debug.LogWarning($"[PathDrawer] Caminho ID {id} é INVÁLIDO/INACESSÍVEL.");
             this.originalColor = InvalidPathColor; 
             lRenderer.positionCount = 0;
             return;
@@ -100,7 +100,7 @@ public class NavMeshPathDrawer : MonoBehaviour
 
         if (pathCorners == null || pathCorners.Length < 2)
         {
-            Debug.LogWarning($"[NavMeshPathDrawer] Caminho inválido recebido para ID {id}. O caminho precisa de pelo menos 2 pontos.");
+            Debug.LogWarning($"[PathDrawer] Caminho inválido recebido para ID {id}. O caminho precisa de pelo menos 2 pontos.");
             this.originalColor = InvalidPathColor; 
             lRenderer.positionCount = 0;
             return;
