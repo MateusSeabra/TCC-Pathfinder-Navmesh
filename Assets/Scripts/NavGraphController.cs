@@ -1,14 +1,13 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
-using System.Linq; 
+using System.Linq;
 
 public class NavNode
 {
     public int PolygonIndex;
     public Vector3 Center;
-    public List<int> Neighbours; 
-
+    public List<int> Neighbours;
     public Vector3[] Vertices;
 
     public float PheromoneBias { get; set; }
@@ -33,19 +32,45 @@ public class NavGraphController : MonoBehaviour
     public static NavGraphController Instance;
     public Dictionary<int, NavNode> Graph;
 
-    private struct EdgeKey
+    private struct QuantizedVector3
     {
-        public readonly int V1;
-        public readonly int V2;
+        public readonly long x, y, z;
+        private const float Precision = 1000f; 
 
-        public EdgeKey(int v1, int v2)
+        public QuantizedVector3(Vector3 v)
         {
-            if (v1 < v2) { V1 = v1; V2 = v2; }
-            else { V1 = v2; V2 = v1; }
+            x = Mathf.RoundToInt(v.x * Precision);
+            y = Mathf.RoundToInt(v.y * Precision);
+            z = Mathf.RoundToInt(v.z * Precision);
         }
 
-        public override bool Equals(object obj) => obj is EdgeKey other && V1 == other.V1 && V2 == other.V2;
-        public override int GetHashCode() => (V1 * 397) ^ V2; 
+        public override bool Equals(object obj) => obj is QuantizedVector3 other && x == other.x && y == other.y && z == other.z;
+        public override int GetHashCode() => (x, y, z).GetHashCode();
+    }
+
+    private struct SpatialEdgeKey
+    {
+        public readonly QuantizedVector3 V1;
+        public readonly QuantizedVector3 V2;
+
+        public SpatialEdgeKey(Vector3 v1, Vector3 v2)
+        {
+            var q1 = new QuantizedVector3(v1);
+            var q2 = new QuantizedVector3(v2);
+
+            if (Compare(q1, q2) < 0) { V1 = q1; V2 = q2; }
+            else { V1 = q2; V2 = q1; }
+        }
+
+        private static int Compare(QuantizedVector3 a, QuantizedVector3 b)
+        {
+            if (a.x != b.x) return a.x.CompareTo(b.x);
+            if (a.y != b.y) return a.y.CompareTo(b.y);
+            return a.z.CompareTo(b.z);
+        }
+
+        public override bool Equals(object obj) => obj is SpatialEdgeKey other && V1.Equals(other.V1) && V2.Equals(other.V2);
+        public override int GetHashCode() => (V1, V2).GetHashCode();
     }
 
     private void Awake()
@@ -61,18 +86,18 @@ public class NavGraphController : MonoBehaviour
 
     public void BuildGraphFromNavMesh()
     {
-        Debug.Log("Iniciando construção do Grafo NavMesh...");
+        Debug.Log("Iniciando construção (WELDED) do Grafo NavMesh...");
         Graph.Clear();
 
         NavMeshTriangulation triangulation = NavMesh.CalculateTriangulation();
 
         if (triangulation.vertices.Length == 0)
         {
-            Debug.LogError("ERRO CRÍTICO: NavMesh vazia. Faça o 'Bake' da NavMesh antes de rodar.");
+            Debug.LogError("ERRO CRÍTICO: NavMesh vazia.");
             return;
         }
 
-        Dictionary<EdgeKey, List<int>> edgeMap = new Dictionary<EdgeKey, List<int>>();
+        Dictionary<SpatialEdgeKey, List<int>> edgeMap = new Dictionary<SpatialEdgeKey, List<int>>();
 
         for (int i = 0; i < triangulation.indices.Length / 3; i++)
         {
@@ -89,48 +114,53 @@ public class NavGraphController : MonoBehaviour
 
             Graph.Add(polygonIndex, new NavNode(polygonIndex, center, new Vector3[] { v1, v2, v3 }));
 
-            RegisterEdge(edgeMap, i1, i2, polygonIndex);
-            RegisterEdge(edgeMap, i2, i3, polygonIndex);
-            RegisterEdge(edgeMap, i3, i1, polygonIndex);
+            RegisterEdge(edgeMap, v1, v2, polygonIndex);
+            RegisterEdge(edgeMap, v2, v3, polygonIndex);
+            RegisterEdge(edgeMap, v3, v1, polygonIndex);
         }
 
         Debug.Log($"Passo 1: {Graph.Count} nós criados.");
 
         int totalConexoes = 0;
-
         foreach (var entry in edgeMap)
         {
             List<int> sharedPolys = entry.Value;
 
-            if (sharedPolys.Count == 2)
+            if (sharedPolys.Count >= 2)
             {
-                int nodeA = sharedPolys[0];
-                int nodeB = sharedPolys[1];
-
-                NavNode nA = Graph[nodeA];
-                NavNode nB = Graph[nodeB];
-
-                if (!nA.Neighbours.Contains(nodeB))
+                for (int a = 0; a < sharedPolys.Count; a++)
                 {
-                    nA.Neighbours.Add(nodeB);
-                    nB.Neighbours.Add(nodeA);
-                    totalConexoes += 2; 
+                    for (int b = a + 1; b < sharedPolys.Count; b++)
+                    {
+                        int nodeA = sharedPolys[a];
+                        int nodeB = sharedPolys[b];
+
+                        NavNode nA = Graph[nodeA];
+                        NavNode nB = Graph[nodeB];
+
+                        if (!nA.Neighbours.Contains(nodeB))
+                        {
+                            nA.Neighbours.Add(nodeB);
+                            nB.Neighbours.Add(nodeA);
+                            totalConexoes += 2;
+                        }
+                    }
                 }
             }
         }
 
         float mediaVizinhos = Graph.Count > 0 ? (float)totalConexoes / Graph.Count : 0;
-        Debug.Log($"Passo 2: {totalConexoes} conexões geradas via Topologia Real.");
-        Debug.Log($"Média de Vizinhos: {mediaVizinhos:F2} (Ideal ~3.0 para malhas triangulares)");
+        Debug.Log($"Passo 2: {totalConexoes} conexões geradas.");
+        Debug.Log($"Média de Vizinhos: {mediaVizinhos:F2} (Agora deve ser ~3.0)");
 
 #if UNITY_EDITOR
         DebugDrawGraph();
 #endif
     }
 
-    private void RegisterEdge(Dictionary<EdgeKey, List<int>> map, int v1, int v2, int polyIndex)
+    private void RegisterEdge(Dictionary<SpatialEdgeKey, List<int>> map, Vector3 v1, Vector3 v2, int polyIndex)
     {
-        EdgeKey key = new EdgeKey(v1, v2);
+        SpatialEdgeKey key = new SpatialEdgeKey(v1, v2);
         if (!map.ContainsKey(key))
         {
             map[key] = new List<int>();
@@ -138,19 +168,9 @@ public class NavGraphController : MonoBehaviour
         map[key].Add(polyIndex);
     }
 
-    public Vector3[] ConvertNodesToPath(List<NavNode> nodes)
-    {
-        if (nodes == null || nodes.Count == 0) return null;
-
-        return nodes.Select(n => n.Center).ToArray();
-    }
-
     public NavNode GetNode(int id)
     {
-        if (Graph.TryGetValue(id, out NavNode node))
-        {
-            return node;
-        }
+        if (Graph.TryGetValue(id, out NavNode node)) return node;
         return null;
     }
 
@@ -162,12 +182,11 @@ public class NavGraphController : MonoBehaviour
         if (NavMesh.SamplePosition(worldPos, out hit, 5.0f, NavMesh.AllAreas))
         {
             NavNode closestNode = null;
-            float minSqrDist = float.MaxValue; 
+            float minSqrDist = float.MaxValue;
 
             foreach (var node in Graph.Values)
             {
-                if (Mathf.Abs(node.Center.x - hit.position.x) > 10f ||
-                    Mathf.Abs(node.Center.z - hit.position.z) > 10f) continue;
+                if (Mathf.Abs(node.Center.x - hit.position.x) > 10f || Mathf.Abs(node.Center.z - hit.position.z) > 10f) continue;
 
                 float sqrDist = (node.Center - hit.position).sqrMagnitude;
                 if (sqrDist < minSqrDist)
@@ -178,7 +197,6 @@ public class NavGraphController : MonoBehaviour
             }
             return closestNode;
         }
-
         return null;
     }
 
@@ -186,7 +204,6 @@ public class NavGraphController : MonoBehaviour
     {
         float total = 0;
         float qtdCell = 0;
-
         foreach (var node in Graph.Values)
         {
             if (node.IsPath)
@@ -206,7 +223,7 @@ public class NavGraphController : MonoBehaviour
             {
                 if (Graph.TryGetValue(neighborId, out NavNode neighbor))
                 {
-                    Debug.DrawLine(node.Center, neighbor.Center, Color.cyan, 10.0f); 
+                    Debug.DrawLine(node.Center, neighbor.Center, Color.cyan, 10.0f);
                 }
             }
         }

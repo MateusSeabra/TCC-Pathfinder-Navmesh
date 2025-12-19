@@ -1,0 +1,9 @@
+1; GameController; Alvo; 0,50; 0,75; 0,00; 0,0000
+2; GameController; Alvo; 0,50; 0,75; 0,00; 0,0000
+1; GameController; Alvo; 0,50; 0,75; 0,00; 0,0000
+1; GameController; Alvo; 0,50; 0,75; 25,71; 0,0000
+2; GameController; Alvo; 0,50; 0,75; 30,89; 0,0000
+3; GameController; Alvo; 0,50; 0,75; 32,00; 0,0000
+4; GameController; Alvo; 0,60; 0,75; 25,71; 0,0000
+5; GameController; Alvo; 0,60; 0,75; 30,89; 0,0000
+6; GameController; Alvo; 0,60; 0,75; 32,00; 0,0000
