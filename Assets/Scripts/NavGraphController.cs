@@ -3,12 +3,21 @@ using UnityEngine.AI;
 using System.Collections.Generic;
 using System.Linq;
 
+public class PortalConnection
+{
+    public int NeighborIndex;
+    public Vector3 LeftVertex;
+    public Vector3 RightVertex;
+}
+
 public class NavNode
 {
     public int PolygonIndex;
     public Vector3 Center;
     public List<int> Neighbours;
     public Vector3[] Vertices;
+
+    public List<PortalConnection> Connections;
 
     public float PheromoneBias { get; set; }
     public List<int> VisitasProximas { get; set; }
@@ -20,6 +29,7 @@ public class NavNode
         Center = center;
         Vertices = vertices;
         Neighbours = new List<int>();
+        Connections = new List<PortalConnection>();
 
         PheromoneBias = 1.0f;
         VisitasProximas = new List<int>();
@@ -73,6 +83,13 @@ public class NavGraphController : MonoBehaviour
         public override int GetHashCode() => (V1, V2).GetHashCode();
     }
 
+    private class EdgeData
+    {
+        public List<int> SharedPolys = new List<int>();
+        public Vector3 V1;
+        public Vector3 V2;
+    }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -97,7 +114,7 @@ public class NavGraphController : MonoBehaviour
             return;
         }
 
-        Dictionary<SpatialEdgeKey, List<int>> edgeMap = new Dictionary<SpatialEdgeKey, List<int>>();
+        Dictionary<SpatialEdgeKey, EdgeData> edgeMap = new Dictionary<SpatialEdgeKey, EdgeData>();
 
         for (int i = 0; i < triangulation.indices.Length / 3; i++)
         {
@@ -124,16 +141,16 @@ public class NavGraphController : MonoBehaviour
         int totalConexoes = 0;
         foreach (var entry in edgeMap)
         {
-            List<int> sharedPolys = entry.Value;
+            EdgeData edge = entry.Value;
 
-            if (sharedPolys.Count >= 2)
+            if (edge.SharedPolys.Count >= 2)
             {
-                for (int a = 0; a < sharedPolys.Count; a++)
+                for (int a = 0; a < edge.SharedPolys.Count; a++)
                 {
-                    for (int b = a + 1; b < sharedPolys.Count; b++)
+                    for (int b = a + 1; b < edge.SharedPolys.Count; b++)
                     {
-                        int nodeA = sharedPolys[a];
-                        int nodeB = sharedPolys[b];
+                        int nodeA = edge.SharedPolys[a];
+                        int nodeB = edge.SharedPolys[b];
 
                         NavNode nA = Graph[nodeA];
                         NavNode nB = Graph[nodeB];
@@ -142,6 +159,10 @@ public class NavGraphController : MonoBehaviour
                         {
                             nA.Neighbours.Add(nodeB);
                             nB.Neighbours.Add(nodeA);
+
+                            nA.Connections.Add(new PortalConnection { NeighborIndex = nodeB, LeftVertex = edge.V1, RightVertex = edge.V2 });
+                            nB.Connections.Add(new PortalConnection { NeighborIndex = nodeA, LeftVertex = edge.V1, RightVertex = edge.V2 });
+
                             totalConexoes += 2;
                         }
                     }
@@ -158,14 +179,14 @@ public class NavGraphController : MonoBehaviour
 #endif
     }
 
-    private void RegisterEdge(Dictionary<SpatialEdgeKey, List<int>> map, Vector3 v1, Vector3 v2, int polyIndex)
+    private void RegisterEdge(Dictionary<SpatialEdgeKey, EdgeData> map, Vector3 v1, Vector3 v2, int polyIndex)
     {
         SpatialEdgeKey key = new SpatialEdgeKey(v1, v2);
         if (!map.ContainsKey(key))
         {
-            map[key] = new List<int>();
+            map[key] = new EdgeData { V1 = v1, V2 = v2 };
         }
-        map[key].Add(polyIndex);
+        map[key].SharedPolys.Add(polyIndex);
     }
 
     public NavNode GetNode(int id)

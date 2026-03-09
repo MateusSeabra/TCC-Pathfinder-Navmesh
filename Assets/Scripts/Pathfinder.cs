@@ -29,6 +29,114 @@ public class Pathfinder : MonoBehaviour
         }
     }
 
+    private Vector3[] ApplyFunnelAlgorithm(List<NavNode> pathNodes, Vector3 startPos, Vector3 endPos)
+    {
+        if (pathNodes.Count == 0) return new Vector3[0];
+        if (pathNodes.Count == 1) return new Vector3[] { startPos, endPos };
+
+        List<Vector3> leftVerts = new List<Vector3> { startPos };
+        List<Vector3> rightVerts = new List<Vector3> { startPos };
+
+        for (int i = 0; i < pathNodes.Count - 1; i++)
+        {
+            NavNode current = pathNodes[i];
+            NavNode next = pathNodes[i + 1];
+
+            PortalConnection conn = current.Connections.Find(c => c.NeighborIndex == next.PolygonIndex);
+            if (conn != null)
+            {
+                Vector3 dir = next.Center - current.Center;
+                Vector3 v1Dir = conn.LeftVertex - current.Center;
+                float crossY = dir.x * v1Dir.z - dir.z * v1Dir.x;
+
+                if (crossY < 0)
+                {
+                    rightVerts.Add(conn.LeftVertex);
+                    leftVerts.Add(conn.RightVertex);
+                }
+                else
+                {
+                    leftVerts.Add(conn.LeftVertex);
+                    rightVerts.Add(conn.RightVertex);
+                }
+            }
+        }
+
+        leftVerts.Add(endPos);
+        rightVerts.Add(endPos);
+
+        List<Vector3> waypoints = new List<Vector3> { startPos };
+        Vector3 portalApex = startPos;
+        Vector3 portalLeft = leftVerts[0];
+        Vector3 portalRight = rightVerts[0];
+
+        int apexIndex = 0, leftIndex = 0, rightIndex = 0;
+
+        for (int i = 1; i < leftVerts.Count; i++)
+        {
+            Vector3 left = leftVerts[i];
+            Vector3 right = rightVerts[i];
+
+            if (TriArea2D(portalApex, portalRight, right) <= 0.0f)
+            {
+                if (portalApex == portalRight || TriArea2D(portalApex, portalLeft, right) > 0.0f)
+                {
+                    portalRight = right;
+                    rightIndex = i;
+                }
+                else
+                {
+                    waypoints.Add(portalLeft);
+                    portalApex = portalLeft;
+                    apexIndex = leftIndex;
+                    portalLeft = portalApex;
+                    portalRight = portalApex;
+                    leftIndex = apexIndex;
+                    rightIndex = apexIndex;
+                    i = apexIndex;
+                    continue;
+                }
+            }
+
+            if (TriArea2D(portalApex, portalLeft, left) >= 0.0f)
+            {
+                if (portalApex == portalLeft || TriArea2D(portalApex, portalRight, left) < 0.0f)
+                {
+                    portalLeft = left;
+                    leftIndex = i;
+                }
+                else
+                {
+                    waypoints.Add(portalRight);
+                    portalApex = portalRight;
+                    apexIndex = rightIndex;
+                    portalLeft = portalApex;
+                    portalRight = portalApex;
+                    leftIndex = apexIndex;
+                    rightIndex = apexIndex;
+                    i = apexIndex;
+                    continue;
+                }
+            }
+        }
+
+        waypoints.Add(endPos);
+
+        List<Vector3> cleanedWaypoints = new List<Vector3>();
+        for (int i = 0; i < waypoints.Count; i++)
+        {
+            if (i == 0 || Vector3.Distance(waypoints[i], waypoints[i - 1]) > 0.01f)
+                cleanedWaypoints.Add(waypoints[i]);
+        }
+
+        return cleanedWaypoints.ToArray();
+    }
+
+    private float TriArea2D(Vector3 a, Vector3 b, Vector3 c)
+    {
+        return (c.x - a.x) * (b.z - a.z) - (b.x - a.x) * (c.z - a.z);
+    }
+
     public PathResult CalculatePath(int agentId, Vector3 startPos, Vector3 endPos)
     {
         if (_navGraph == null || _navGraph.Graph.Count == 0)
@@ -67,7 +175,7 @@ public class Pathfinder : MonoBehaviour
 
             if (currentNode.NodeData == endNode)
             {
-                return ReconstructPath(currentNode, agentId);
+                return ReconstructPath(currentNode, agentId, startPos, endPos);
             }
 
             closedSet.Add(currentNode.NodeData.PolygonIndex);
@@ -96,19 +204,14 @@ public class Pathfinder : MonoBehaviour
         return new PathResult { Success = false };
     }
 
-    private PathResult ReconstructPath(AStarNode finalNode, int agentId)
+    private PathResult ReconstructPath(AStarNode finalNode, int agentId, Vector3 startPos, Vector3 endPos)
     {
         List<NavNode> pathNodes = new List<NavNode>();
         AStarNode current = finalNode;
-        float totalLength = 0;
 
         while (current != null)
         {
             pathNodes.Add(current.NodeData);
-            if (current.Parent != null)
-            {
-                totalLength += Vector3.Distance(current.NodeData.Center, current.Parent.NodeData.Center);
-            }
             current = current.Parent;
         }
 
@@ -116,14 +219,20 @@ public class Pathfinder : MonoBehaviour
 
         ApplyPheromones(pathNodes, agentId);
 
-        Vector3[] waypoints = pathNodes.Select(n => n.Center).ToArray();
+        Vector3[] waypoints = ApplyFunnelAlgorithm(pathNodes, startPos, endPos);
+
+        float totalLength = 0;
+        for (int i = 0; i < waypoints.Length - 1; i++)
+        {
+            totalLength += Vector3.Distance(waypoints[i], waypoints[i + 1]);
+        }
 
         return new PathResult
         {
             Success = true,
             TotalLength = totalLength,
             Waypoints = waypoints,
-            PathNodes = pathNodes 
+            PathNodes = pathNodes
         };
     }
 
