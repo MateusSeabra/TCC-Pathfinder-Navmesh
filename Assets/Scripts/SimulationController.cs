@@ -28,6 +28,7 @@ public class SimulationController : MonoBehaviour
     private int _sortTypeIndex;
     private int _totalTests;
     private string _currentSortModeName;
+    private string _currentScenarioName;
     private bool _triggerTest;
     private bool _triggerNextConfig;
 
@@ -79,10 +80,13 @@ public class SimulationController : MonoBehaviour
         _scenarioGenerator.BuildScenario(_mapTypeIndex);
         UpdateUI_MapName();
 
+        string[] mapNames = { "Lonely Tree", "Chinese Wall", "Big Rock" };
+        _currentScenarioName = mapNames[_mapTypeIndex];
+
         _activeUnits = new List<Vector3>(_scenarioGenerator.StartPositions);
 
         ConfigurePathfinderBias();
-        UpdateUI_BiasInfo();
+        UpdateUI_MapName();
 
         ApplyUnitSorting();
 
@@ -124,7 +128,7 @@ public class SimulationController : MonoBehaviour
 
         _logger.WriteLog(
             _totalTests,
-            _scenarioGenerator.name, 
+            _currentScenarioName,
             _currentSortModeName,
             _pathfinder.BiasFactor,
             _pathfinder.BiasCap,

@@ -138,6 +138,8 @@ public class Pathfinder : MonoBehaviour
                 node.VisitasProximas.Add(agentId);
             }
 
+            node.IsPath = true;
+
             SpreadPheromoneRecursive(node, node, 1);
         }
     }
