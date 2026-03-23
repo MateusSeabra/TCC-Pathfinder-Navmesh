@@ -25,6 +25,8 @@ public class TestLogger : MonoBehaviour
             string date = DateTime.Now.ToString("yyyy-MM-dd");
             string fullPath = Path.Combine(logFolderPath, $"{filePrefix}{date}{versionSuffix}.txt");
 
+            bool isNewFile = !File.Exists(fullPath);
+
             string line = $"{testIndex}{Separator}" +
                           $"{scenarioName}{Separator}" +
                           $"{algorithmName}{Separator}" +
@@ -35,6 +37,14 @@ public class TestLogger : MonoBehaviour
 
             using (StreamWriter writer = new StreamWriter(fullPath, true))
             {
+                if (isNewFile)
+                {
+                    string header = $"ID_Teste{Separator}Cenario{Separator}Ordem_Agentes{Separator}" +
+                                    $"Fator_Feromonio(Bias){Separator}Limite_Feromonio(Cap){Separator}" +
+                                    $"Comprimento_Medio{Separator}Fraternidade_Coesao";
+                    writer.WriteLine(header);
+                }
+
                 writer.WriteLine(line);
             }
         }

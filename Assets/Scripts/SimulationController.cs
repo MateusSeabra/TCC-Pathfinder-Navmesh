@@ -86,7 +86,8 @@ public class SimulationController : MonoBehaviour
         _activeUnits = new List<Vector3>(_scenarioGenerator.StartPositions);
 
         ConfigurePathfinderBias();
-        UpdateUI_MapName();
+
+        UpdateUI_BiasInfo();
 
         ApplyUnitSorting();
 
@@ -136,8 +137,11 @@ public class SimulationController : MonoBehaviour
             fraternity
         );
 
-        UpdateUI_Result(avgLength);
-        Debug.Log($"Teste #{_totalTests} concluído. Média: {avgLength:F2}");
+        UpdateUI_Result(avgLength, fraternity);
+
+        Debug.Log($"[RESULTADO] Teste #{_totalTests} | Cenário: {_currentScenarioName} | " +
+                  $"Ordem: {_currentSortModeName} | Feromônio (Bias/Cap): {_pathfinder.BiasFactor:F2}/{_pathfinder.BiasCap:F2} | " +
+                  $"Distância Média: {avgLength:F2} | Coesão (Fraternidade): {fraternity:F2}");
     }
 
     private void DrawPathForAgent(int agentIndex, Vector3[] waypoints)
@@ -253,17 +257,23 @@ public class SimulationController : MonoBehaviour
     {
         if (!mapNameText) return;
         string[] names = { "Lonely Tree", "Chinese Wall", "Boulder" };
-        if (_mapTypeIndex < names.Length) mapNameText.text = "Map: " + names[_mapTypeIndex];
+        if (_mapTypeIndex < names.Length)
+            mapNameText.text = $"Cenário: {names[_mapTypeIndex]}";
     }
 
     private void UpdateUI_BiasInfo()
     {
-        if (capNameText) capNameText.text = "Cap: " + _pathfinder.BiasCap;
-        if (biasNameText) biasNameText.text = "Bias: " + _pathfinder.BiasFactor;
+        if (biasNameText) biasNameText.text = $"Fator de Feromônio (Bias): {_pathfinder.BiasFactor:F2}";
+        if (capNameText) capNameText.text = $"Limite de Redução (Cap): {_pathfinder.BiasCap:F2}";
     }
 
-    private void UpdateUI_Result(float avg)
+    private void UpdateUI_Result(float avg, float fraternity)
     {
-        if (lengthNameText) lengthNameText.text = "Avg. Length: " + avg.ToString("F2");
+        if (lengthNameText)
+        {
+            lengthNameText.text = $"Comprimento Médio: {avg:F2}\n" +
+                                  "\n" +
+                                  $"Coesão (Fraternidade): {fraternity:F2}";
+        }
     }
 }
