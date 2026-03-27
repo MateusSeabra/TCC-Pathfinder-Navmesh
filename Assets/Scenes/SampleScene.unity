@@ -1263,8 +1263,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 786ba116936614143b428eb8263db35c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pathfinder
-  BiasFactor: 0.75
-  BiasCap: 0.5
+  BiasFactor: 0.9
+  BiasCap: 0.75
   maxIterations: 50000
 --- !u!114 &1710787596
 MonoBehaviour:
