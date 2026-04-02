@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 public class SimulationController : MonoBehaviour
 {
@@ -98,7 +100,7 @@ public class SimulationController : MonoBehaviour
     {
         if (_activeUnits.Count == 0 || _scenarioGenerator.TargetPosition == Vector3.zero)
         {
-            Debug.LogError("[SimulationController] Cenário vazio ou inválido.");
+            UnityEngine.Debug.LogError("[SimulationController] Cenário vazio ou inválido.");
             return;
         }
 
@@ -107,6 +109,8 @@ public class SimulationController : MonoBehaviour
         int successCount = 0;
 
         ClearVisuals();
+
+        Stopwatch stopwatch = Stopwatch.StartNew();
 
         for (int i = 0; i < _activeUnits.Count; i++)
         {
@@ -121,6 +125,9 @@ public class SimulationController : MonoBehaviour
             }
         }
 
+        stopwatch.Stop();
+        long calcTimeMs = stopwatch.ElapsedMilliseconds;
+
         float avgLength = successCount > 0 ? accumulatedDistance / successCount : 0;
 
         float fraternity = 0;
@@ -134,14 +141,15 @@ public class SimulationController : MonoBehaviour
             _pathfinder.BiasFactor,
             _pathfinder.BiasCap,
             avgLength,
-            fraternity
+            fraternity,
+            calcTimeMs
         );
 
-        UpdateUI_Result(avgLength, fraternity);
+        UpdateUI_Result(avgLength, fraternity, calcTimeMs);
 
-        Debug.Log($"[RESULTADO] Teste #{_totalTests} | Cenário: {_currentScenarioName} | " +
+        UnityEngine.Debug.Log($"[RESULTADO] Teste #{_totalTests} | Cenário: {_currentScenarioName} | " +
                   $"Ordem: {_currentSortModeName} | Feromônio (Bias/Cap): {_pathfinder.BiasFactor:F2}/{_pathfinder.BiasCap:F2} | " +
-                  $"Distância Média: {avgLength:F2} | Coesão (Fraternidade): {fraternity:F2}");
+                  $"Distância Média: {avgLength:F2} | Coesão (Fraternidade): {fraternity:F2} | Tempo de CPU: {calcTimeMs}ms");
     }
 
     private void DrawPathForAgent(int agentIndex, Vector3[] waypoints)
@@ -267,13 +275,15 @@ public class SimulationController : MonoBehaviour
         if (capNameText) capNameText.text = $"Limite de Redução (Cap): {_pathfinder.BiasCap:F2}";
     }
 
-    private void UpdateUI_Result(float avg, float fraternity)
+    private void UpdateUI_Result(float avg, float fraternity, long calcTimeMs)
     {
         if (lengthNameText)
         {
             lengthNameText.text = $"Comprimento Médio: {avg:F2}\n" +
                                   "\n" +
-                                  $"Coesão (Fraternidade): {fraternity:F2}";
+                                  $"Coesão (Fraternidade): {fraternity:F2}\n" +
+                                  "\n" +
+                                  $"Tempo de Processamento: {calcTimeMs} ms";
         }
     }
 }

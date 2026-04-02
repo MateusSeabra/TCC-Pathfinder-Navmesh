@@ -12,7 +12,7 @@ public class TestLogger : MonoBehaviour
     private const string Separator = "; ";
 
     public void WriteLog(int testIndex, string scenarioName, string algorithmName,
-                         float biasFactor, float biasCap, float avgPathLength, float fraternityMetric)
+                         float biasFactor, float biasCap, float avgPathLength, float fraternityMetric, long calcTimeMs)
     {
         try
         {
@@ -33,7 +33,8 @@ public class TestLogger : MonoBehaviour
                           $"{biasFactor:F2}{Separator}" +
                           $"{biasCap:F2}{Separator}" +
                           $"{avgPathLength:F2}{Separator}" +
-                          $"{fraternityMetric:F4}";
+                          $"{fraternityMetric:F4}{Separator}" +
+                          $"{calcTimeMs}";
 
             using (StreamWriter writer = new StreamWriter(fullPath, true))
             {
@@ -41,7 +42,7 @@ public class TestLogger : MonoBehaviour
                 {
                     string header = $"ID_Teste{Separator}Cenario{Separator}Ordem_Agentes{Separator}" +
                                     $"Fator_Feromonio(Bias){Separator}Limite_Feromonio(Cap){Separator}" +
-                                    $"Comprimento_Medio{Separator}Fraternidade_Coesao";
+                                    $"Comprimento_Medio{Separator}Fraternidade_Coesao{Separator}Tempo_Computacao_ms";
                     writer.WriteLine(header);
                 }
 
