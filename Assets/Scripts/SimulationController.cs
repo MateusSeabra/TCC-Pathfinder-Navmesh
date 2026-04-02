@@ -110,6 +110,16 @@ public class SimulationController : MonoBehaviour
 
         ClearVisuals();
 
+        if (NavGraphController.Instance != null && NavGraphController.Instance.Graph != null)
+        {
+            foreach (var node in NavGraphController.Instance.Graph.Values)
+            {
+                node.PheromoneBias = 1.0f;
+                node.IsPath = false;
+                if (node.VisitasProximas != null) node.VisitasProximas.Clear();
+            }
+        }
+
         Stopwatch stopwatch = Stopwatch.StartNew();
 
         for (int i = 0; i < _activeUnits.Count; i++)
