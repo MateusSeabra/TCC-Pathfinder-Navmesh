@@ -1,4 +1,0 @@
-1; Lonely Tree; Alvo; 0,50; 0,75; 25,71; 10,1919
-2; Chinese Wall; Alvo; 0,50; 0,75; 30,89; 12,2701
-3; Big Rock; Alvo; 0,50; 0,75; 32,00; 12,5040
-4; Lonely Tree; Alvo; 0,60; 0,75; 25,71; 10,1919

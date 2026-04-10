@@ -1,6 +1,0 @@
-1, Árvore solitária, Alvo, 0,95, 14.62267, 8.214286
-1, Árvore solitária, Alvo, 0,95, 14.62267, 8.214286
-1, Muralha da China, Alvo, 0,95, 31.87186, 9.138889
-1, Muralha da China, Alvo, 0,95, 31.87186, 9.138889
-1, Muralha da China, Alvo, 0,95, 30.88071, 14.56522
-1, Muralha da China, Alvo, 1, 29.51252, 6.076555

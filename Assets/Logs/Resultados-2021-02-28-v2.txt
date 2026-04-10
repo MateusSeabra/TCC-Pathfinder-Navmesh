@@ -1,3 +1,0 @@
-1, Árvore solitária, Alvo, 0.9, 19.63712, 10.09278
-2, Muralha da China, Alvo, 0.9, 26.01089, 12.08046
-3, Pedregulho, Alvo, 0.9, 25.22792, 12.54545

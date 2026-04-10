@@ -11,7 +11,6 @@ public class SimulationController : MonoBehaviour
     [Header("Modules Integration")]
     [SerializeField] private ScenarioGenerator _scenarioGenerator;
     [SerializeField] private Pathfinder _pathfinder;
-    [SerializeField] private TestLogger _logger;
 
     [Header("Visuals")]
     [Tooltip("Prefab que contém o script PathDrawer.")]
@@ -64,7 +63,7 @@ public class SimulationController : MonoBehaviour
         _activeUnits = new List<Vector3>();
         _spawnedDrawers = new List<PathDrawer>();
 
-        if (!_scenarioGenerator || !_pathfinder || !_logger)
+        if (!_scenarioGenerator || !_pathfinder)
         {
             Debug.LogError("[SimulationController] Dependências não atribuídas no Inspector!");
             this.enabled = false;
@@ -158,17 +157,6 @@ public class SimulationController : MonoBehaviour
         float fraternity = 0;
         if (NavGraphController.Instance != null)
             fraternity = NavGraphController.Instance.CalculateFraternity();
-
-        _logger.WriteLog(
-            _totalTests,
-            _currentScenarioName,
-            _currentSortModeName,
-            _pathfinder.BiasFactor,
-            _pathfinder.BiasCap,
-            avgLength,
-            fraternity,
-            calcTimeMs
-        );
 
         UpdateUI_Result(avgLength, fraternity, calcTimeMs);
 

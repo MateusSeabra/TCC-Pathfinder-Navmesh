@@ -1192,7 +1192,6 @@ GameObject:
   - component: {fileID: 1710787597}
   - component: {fileID: 1710787596}
   - component: {fileID: 1710787595}
-  - component: {fileID: 1710787594}
   - component: {fileID: 1710787593}
   m_Layer: 0
   m_Name: GameController
@@ -1230,7 +1229,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SimulationController
   _scenarioGenerator: {fileID: 1710787596}
   _pathfinder: {fileID: 1710787595}
-  _logger: {fileID: 1710787594}
   agentDrawerPrefab: {fileID: 2067088559070557789, guid: 3a9ff3a6ce0e7d14ea6cf1b3c2373b73,
     type: 3}
   visualizerContainer: {fileID: 924649435}
@@ -1241,21 +1239,6 @@ MonoBehaviour:
   navMeshSurface: {fileID: 269320253}
   textVoxelSize: {fileID: 1994017750}
   textTileSize: {fileID: 1863336738}
---- !u!114 &1710787594
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1710787590}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c396ff7067450b489037a25a367716c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TestLogger
-  logFolderPath: Assets/Logs/
-  filePrefix: Resultados-
-  versionSuffix: -v3
 --- !u!114 &1710787595
 MonoBehaviour:
   m_ObjectHideFlags: 0

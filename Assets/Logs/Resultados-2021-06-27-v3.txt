@@ -1,4 +1,0 @@
-1; Árvore solitária; Alvo; 1; 1; 19,51252; 6,421052
-1; Muralha da China; Alvo; 1; 1; 25,51252; 6,182857
-2; Muralha da China; Alvo; 1; 1; 25,51252; 6,182857
-1; Pedregulho; Alvo; 1; 1; 23,29859; 8,855263
