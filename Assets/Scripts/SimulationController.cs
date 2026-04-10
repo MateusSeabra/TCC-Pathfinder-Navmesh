@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.AI;
+using Unity.AI.Navigation;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 
@@ -22,8 +24,18 @@ public class SimulationController : MonoBehaviour
     [SerializeField] private Text capNameText;
     [SerializeField] private Text lengthNameText;
 
+    [Header("Configurações do NavMesh")]
+    [SerializeField] private NavMeshSurface navMeshSurface;
+
+    [Header("UI Adicional")]
+    [SerializeField] private Text textVoxelSize;
+    [SerializeField] private Text textTileSize;
+
     private List<Vector3> _activeUnits; 
-    private List<PathDrawer> _spawnedDrawers; 
+    private List<PathDrawer> _spawnedDrawers;
+
+    private float currentVoxelSize;
+    private int currentTileSize;
 
     private int _mapTypeIndex;
     private int _biasTypeIndex;
@@ -80,9 +92,12 @@ public class SimulationController : MonoBehaviour
     public bool ApplyNextConfig()
     {
         _scenarioGenerator.BuildScenario(_mapTypeIndex);
+
+        ExtractNavMeshSettings();
+
         UpdateUI_MapName();
 
-        string[] mapNames = { "Lonely Tree", "Chinese Wall", "Big Rock" };
+        string[] mapNames = { "Lonely Tree", "Chinese Wall", "Big Rock", "Forest", "Broken Rock", "Maze" };
         _currentScenarioName = mapNames[_mapTypeIndex];
 
         _activeUnits = new List<Vector3>(_scenarioGenerator.StartPositions);
@@ -159,7 +174,28 @@ public class SimulationController : MonoBehaviour
 
         UnityEngine.Debug.Log($"[RESULTADO] Teste #{_totalTests} | Cenário: {_currentScenarioName} | " +
                   $"Ordem: {_currentSortModeName} | Feromônio (Bias/Cap): {_pathfinder.BiasFactor:F2}/{_pathfinder.BiasCap:F2} | " +
-                  $"Distância Média: {avgLength:F2} | Coesão (Fraternidade): {fraternity:F2} | Tempo de CPU: {calcTimeMs}ms");
+                  $"Voxel/Tile: {currentVoxelSize:F3}/{currentTileSize} | " +
+                  $"Dist. Média: {avgLength:F2} | Coesão: {fraternity:F2} | Tempo CPU: {calcTimeMs}ms");
+    }
+
+    private void ExtractNavMeshSettings()
+    {
+        if (navMeshSurface == null)
+        {
+            Debug.LogError("NavMeshSurface não foi linkado no Inspector!");
+            return;
+        }
+
+        NavMeshBuildSettings buildSettings = navMeshSurface.GetBuildSettings();
+
+        currentVoxelSize = buildSettings.voxelSize;
+        currentTileSize = buildSettings.tileSize;
+
+        if (textVoxelSize != null)
+            textVoxelSize.text = $"Voxel Size: {currentVoxelSize:F3}";
+
+        if (textTileSize != null)
+            textTileSize.text = $"Tile Size: {currentTileSize}";
     }
 
     private void DrawPathForAgent(int agentIndex, Vector3[] waypoints)
@@ -258,7 +294,7 @@ public class SimulationController : MonoBehaviour
         }
 
         _mapTypeIndex++;
-        if (_mapTypeIndex == 3)
+        if (_mapTypeIndex == 6)
         {
             _mapTypeIndex = 0;
             _biasTypeIndex++;
@@ -274,7 +310,7 @@ public class SimulationController : MonoBehaviour
     private void UpdateUI_MapName()
     {
         if (!mapNameText) return;
-        string[] names = { "Lonely Tree", "Chinese Wall", "Boulder" };
+        string[] names = { "Lonely Tree", "Chinese Wall", "Boulder", "Forest", "Broken Rock", "Maze" };
         if (_mapTypeIndex < names.Length)
             mapNameText.text = $"Cenário: {names[_mapTypeIndex]}";
     }
