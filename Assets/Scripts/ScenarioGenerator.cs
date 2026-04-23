@@ -26,7 +26,7 @@ public class ScenarioGenerator : MonoBehaviour
     {
         LonelyTree = 0,
         ChineseWall = 1,
-        BigRock = 2,
+        Boulder = 2,
         Forest = 3,
         BrokenRock = 4,
         Maze = 5
@@ -48,8 +48,6 @@ public class ScenarioGenerator : MonoBehaviour
 
     public void BuildScenario(ScenarioType type)
     {
-        Debug.Log($"[ScenarioGenerator] Construindo cenário: {type}");
-
         ClearScenario();
 
         switch (type)
@@ -60,8 +58,8 @@ public class ScenarioGenerator : MonoBehaviour
             case ScenarioType.ChineseWall:
                 SetupChineseWall();
                 break;
-            case ScenarioType.BigRock:
-                SetupBigRock();
+            case ScenarioType.Boulder:
+                SetupBoulder();
                 break;
             case ScenarioType.Forest:
                 SetupForest();
@@ -144,7 +142,7 @@ public class ScenarioGenerator : MonoBehaviour
         }
     }
 
-    private void SetupBigRock()
+    private void SetupBoulder()
     {
         SetTargetPos(new Vector3(14, 1f, 24));
 

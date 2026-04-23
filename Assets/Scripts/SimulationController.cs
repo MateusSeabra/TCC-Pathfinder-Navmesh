@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,9 +9,21 @@ using Debug = UnityEngine.Debug;
 
 public class SimulationController : MonoBehaviour
 {
+    [System.Serializable]
+    public struct TestConfiguration
+    {
+        public int MapIndex;
+        public float Bias;
+        public float Cap;
+        public float Voxel;
+        public int Tile;
+        public int SortIndex;
+    }
+
     [Header("Modules Integration")]
     [SerializeField] private ScenarioGenerator _scenarioGenerator;
     [SerializeField] private Pathfinder _pathfinder;
+    [SerializeField] private TestLogger _logger;
 
     [Header("Visuals")]
     [Tooltip("Prefab que contém o script PathDrawer.")]
@@ -29,6 +42,15 @@ public class SimulationController : MonoBehaviour
     [Header("UI Adicional")]
     [SerializeField] private Text textVoxelSize;
     [SerializeField] private Text textTileSize;
+
+    [Header("Automação - Valores para Varredura (4 cada)")]
+    [SerializeField] private float[] _biasFactors = new float[4] { 0.5f, 0.75f, 0.9f, 0.95f };
+    [SerializeField] private float[] _biasCaps = new float[4] { 0.01f, 0.5f, 0.75f, 1.0f };
+    [SerializeField] private float[] _voxelSizes = new float[4] { 0.02f, 0.05f, 0.1f, 0.16f };
+    [SerializeField] private int[] _tileSizes = new int[4] { 16, 32, 64, 128 };
+
+    private List<TestConfiguration> _testQueue = new List<TestConfiguration>();
+    private int _currentQueueIndex = 0;
 
     private List<Vector3> _activeUnits; 
     private List<PathDrawer> _spawnedDrawers;
@@ -62,6 +84,8 @@ public class SimulationController : MonoBehaviour
     {
         _activeUnits = new List<Vector3>();
         _spawnedDrawers = new List<PathDrawer>();
+        GenerateTestQueue();
+        _currentQueueIndex = 0;
 
         if (!_scenarioGenerator || !_pathfinder)
         {
@@ -72,42 +96,11 @@ public class SimulationController : MonoBehaviour
 
     private void Update()
     {
-        if (_triggerTest)
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            _triggerTest = false;
-            RunBatchTest();
+            StopAllCoroutines();
+            StartCoroutine(RunAutomationSuite());
         }
-
-        if (_triggerNextConfig || Input.GetKeyDown(KeyCode.Space))
-        {
-            _triggerNextConfig = false;
-            _triggerTest = ApplyNextConfig(); 
-        }
-
-        if (Input.GetKeyDown(KeyCode.T))
-            RunBatchTest();
-    }
-
-    public bool ApplyNextConfig()
-    {
-        _scenarioGenerator.BuildScenario(_mapTypeIndex);
-
-        ExtractNavMeshSettings();
-
-        UpdateUI_MapName();
-
-        string[] mapNames = { "Lonely Tree", "Chinese Wall", "Big Rock", "Forest", "Broken Rock", "Maze" };
-        _currentScenarioName = mapNames[_mapTypeIndex];
-
-        _activeUnits = new List<Vector3>(_scenarioGenerator.StartPositions);
-
-        //ConfigurePathfinderBias();
-
-        UpdateUI_BiasInfo();
-
-        ApplyUnitSorting();
-
-        return AdvanceIndices();
     }
 
     private void RunBatchTest()
@@ -158,12 +151,23 @@ public class SimulationController : MonoBehaviour
         if (NavGraphController.Instance != null)
             fraternity = NavGraphController.Instance.CalculateFraternity();
 
-        UpdateUI_Result(avgLength, fraternity, calcTimeMs);
+        if (_logger != null)
+        {
+            _logger.WriteLog(
+                _totalTests,
+                _currentScenarioName,
+                _currentSortModeName,
+                _pathfinder.BiasFactor,
+                _pathfinder.BiasCap,
+                currentVoxelSize,
+                currentTileSize,
+                avgLength,
+                fraternity,
+                calcTimeMs
+            );
+        }
 
-        UnityEngine.Debug.Log($"[RESULTADO] Teste #{_totalTests} | Cenário: {_currentScenarioName} | " +
-                  $"Ordem: {_currentSortModeName} | Feromônio (Bias/Cap): {_pathfinder.BiasFactor:F2}/{_pathfinder.BiasCap:F2} | " +
-                  $"Voxel/Tile: {currentVoxelSize:F3}/{currentTileSize} | " +
-                  $"Dist. Média: {avgLength:F2} | Coesão: {fraternity:F2} | Tempo CPU: {calcTimeMs}ms");
+        UpdateUI_Result(avgLength, fraternity, calcTimeMs);
     }
 
     private void ExtractNavMeshSettings()
@@ -217,26 +221,6 @@ public class SimulationController : MonoBehaviour
         }
     }
 
-    private void ConfigurePathfinderBias()
-    {
-        switch (_sortTypeIndex)
-        {
-            case 0: _pathfinder.BiasCap = 0.75f; break;
-            case 1: _pathfinder.BiasCap = 0.5f; break;
-            case 2: _pathfinder.BiasCap = 0.01f; break;
-        }
-
-        switch (_biasTypeIndex)
-        {
-            case 0: _pathfinder.BiasFactor = 0.5f; break;
-            case 1: _pathfinder.BiasFactor = 0.6f; break;
-            case 2: _pathfinder.BiasFactor = 0.75f; break;
-            case 3: _pathfinder.BiasFactor = 0.9f; break;
-            case 4: _pathfinder.BiasFactor = 0.95f; break;
-            case 5: _pathfinder.BiasFactor = 0.99f; break;
-        }
-    }
-
     private void ApplyUnitSorting()
     {
         Vector3 target = _scenarioGenerator.TargetPosition;
@@ -273,28 +257,6 @@ public class SimulationController : MonoBehaviour
         return sum / points.Count;
     }
 
-    private bool AdvanceIndices()
-    {
-        if (_sortTypeIndex == 3) 
-        {
-            Debug.Log("BATCH COMPLETO!");
-            return false;
-        }
-
-        _mapTypeIndex++;
-        if (_mapTypeIndex == 6)
-        {
-            _mapTypeIndex = 0;
-            _biasTypeIndex++;
-            if (_biasTypeIndex == 6)
-            {
-                _biasTypeIndex = 0;
-                _sortTypeIndex++;
-            }
-        }
-        return true;
-    }
-
     private void UpdateUI_MapName()
     {
         if (!mapNameText) return;
@@ -319,5 +281,79 @@ public class SimulationController : MonoBehaviour
                                   "\n" +
                                   $"Tempo de Processamento: {calcTimeMs} ms";
         }
+    }
+
+    private void GenerateTestQueue()
+    {
+        _testQueue.Clear();
+
+        for (int s = 0; s < 3; s++)
+        {
+            for (int m = 0; m < 6; m++)
+            {
+                foreach (float b in _biasFactors)
+                {
+                    foreach (float c in _biasCaps)
+                    {
+                        foreach (float v in _voxelSizes)
+                        {
+                            foreach (int t in _tileSizes)
+                            {
+                                _testQueue.Add(new TestConfiguration
+                                {
+                                    MapIndex = m,
+                                    Bias = b,
+                                    Cap = c,
+                                    Voxel = v,
+                                    Tile = t,
+                                    SortIndex = s
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private IEnumerator RunAutomationSuite()
+    {
+        UnityEngine.Debug.Log($"[Automação] Iniciando bateria de {_testQueue.Count} testes...");
+        _currentQueueIndex = 0;
+
+        while (_currentQueueIndex < _testQueue.Count)
+        {
+            TestConfiguration config = _testQueue[_currentQueueIndex];
+
+            navMeshSurface.overrideVoxelSize = true;
+            navMeshSurface.overrideTileSize = true;
+
+            navMeshSurface.voxelSize = config.Voxel;
+            navMeshSurface.tileSize = config.Tile;
+
+            _pathfinder.BiasFactor = config.Bias;
+            _pathfinder.BiasCap = config.Cap;
+            _sortTypeIndex = config.SortIndex;
+            _mapTypeIndex = config.MapIndex;
+
+            _scenarioGenerator.BuildScenario(config.MapIndex);
+
+            ExtractNavMeshSettings();
+            UpdateUI_MapName();
+            UpdateUI_BiasInfo();
+
+            string[] mapNames = { "Lonely Tree", "Chinese Wall", "Boulder", "Forest", "Broken Rock", "Maze" };
+            _currentScenarioName = mapNames[config.MapIndex];
+
+            _activeUnits = new List<Vector3>(_scenarioGenerator.StartPositions);
+            ApplyUnitSorting();
+
+            RunBatchTest();
+
+            _currentQueueIndex++;
+            yield return null;
+        }
+
+        UnityEngine.Debug.Log("[Automação] Bateria de testes concluída com sucesso!");
     }
 }

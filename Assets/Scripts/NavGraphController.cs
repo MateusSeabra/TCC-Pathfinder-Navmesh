@@ -103,7 +103,6 @@ public class NavGraphController : MonoBehaviour
 
     public void BuildGraphFromNavMesh()
     {
-        Debug.Log("Iniciando construção do Grafo NavMesh...");
         Graph.Clear();
 
         NavMeshTriangulation triangulation = NavMesh.CalculateTriangulation();
@@ -135,8 +134,6 @@ public class NavGraphController : MonoBehaviour
             RegisterEdge(edgeMap, v2, v3, polygonIndex);
             RegisterEdge(edgeMap, v3, v1, polygonIndex);
         }
-
-        Debug.Log($"Passo 1: {Graph.Count} nós criados.");
 
         int totalConexoes = 0;
         foreach (var entry in edgeMap)
@@ -171,8 +168,6 @@ public class NavGraphController : MonoBehaviour
         }
 
         float mediaVizinhos = Graph.Count > 0 ? (float)totalConexoes / Graph.Count : 0;
-        Debug.Log($"Passo 2: {totalConexoes} conexões geradas.");
-        Debug.Log($"Média de Vizinhos: {mediaVizinhos:F2}");
 
 #if UNITY_EDITOR
         DebugDrawGraph();
