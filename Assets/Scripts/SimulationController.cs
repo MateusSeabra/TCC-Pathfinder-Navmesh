@@ -49,6 +49,11 @@ public class SimulationController : MonoBehaviour
     [SerializeField] private float[] _voxelSizes = new float[4] { 0.02f, 0.05f, 0.1f, 0.16f };
     [SerializeField] private int[] _tileSizes = new int[4] { 16, 32, 64, 128 };
 
+    [Header("Automação - Filtro de Cenário")]
+    [Tooltip("Se marcado, a automação rodará apenas no cenário selecionado abaixo.")]
+    [SerializeField] private bool testOnlySelectedMap = true;
+    [SerializeField] private ScenarioGenerator.ScenarioType targetMapToTest;
+
     private List<TestConfiguration> _testQueue = new List<TestConfiguration>();
     private int _currentQueueIndex = 0;
 
@@ -287,9 +292,13 @@ public class SimulationController : MonoBehaviour
     {
         _testQueue.Clear();
 
-        for (int s = 0; s < 3; s++)
+        // NOVO: Define onde o loop de mapas começa e termina baseado na sua escolha do Inspector
+        int startMap = testOnlySelectedMap ? (int)targetMapToTest : 0;
+        int endMap = testOnlySelectedMap ? (int)targetMapToTest + 1 : 6;
+
+        for (int s = 0; s < 3; s++) // Loop dos Modos de Ordenação
         {
-            for (int m = 0; m < 6; m++)
+            for (int m = startMap; m < endMap; m++) // Loop dos Mapas (agora dinâmico!)
             {
                 foreach (float b in _biasFactors)
                 {
