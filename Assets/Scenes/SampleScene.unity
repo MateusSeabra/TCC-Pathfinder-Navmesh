@@ -1259,6 +1259,8 @@ MonoBehaviour:
   _tileSizes: 10000000200000004000000080000000
   testOnlySelectedMap: 0
   targetMapToTest: 0
+  _captureScreenshots: 1
+  _screenshotFolder: Assets/Images/
 --- !u!114 &1710787595
 MonoBehaviour:
   m_ObjectHideFlags: 0
