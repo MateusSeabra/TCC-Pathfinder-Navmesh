@@ -54,6 +54,11 @@ public class SimulationController : MonoBehaviour
     [SerializeField] private bool testOnlySelectedMap = true;
     [SerializeField] private ScenarioGenerator.ScenarioType targetMapToTest;
 
+    [Header("Automação - Captura de Tela")]
+    [Tooltip("Se marcado, o Unity salvará uma imagem do resultado de CADA teste na pasta escolhida.")]
+    [SerializeField] private bool _captureScreenshots = false;
+    [SerializeField] private string _screenshotFolder = "Assets/Images/";
+
     private List<TestConfiguration> _testQueue = new List<TestConfiguration>();
     private int _currentQueueIndex = 0;
 
@@ -291,14 +296,12 @@ public class SimulationController : MonoBehaviour
     private void GenerateTestQueue()
     {
         _testQueue.Clear();
-
-        // NOVO: Define onde o loop de mapas começa e termina baseado na sua escolha do Inspector
         int startMap = testOnlySelectedMap ? (int)targetMapToTest : 0;
         int endMap = testOnlySelectedMap ? (int)targetMapToTest + 1 : 6;
 
-        for (int s = 0; s < 3; s++) // Loop dos Modos de Ordenação
+        for (int s = 0; s < 3; s++)
         {
-            for (int m = startMap; m < endMap; m++) // Loop dos Mapas (agora dinâmico!)
+            for (int m = startMap; m < endMap; m++)
             {
                 foreach (float b in _biasFactors)
                 {
@@ -330,6 +333,14 @@ public class SimulationController : MonoBehaviour
         UnityEngine.Debug.Log($"[Automação] Iniciando bateria de {_testQueue.Count} testes...");
         _currentQueueIndex = 0;
 
+        if (_captureScreenshots)
+        {
+            if (!System.IO.Directory.Exists(_screenshotFolder))
+            {
+                System.IO.Directory.CreateDirectory(_screenshotFolder);
+            }
+        }
+
         while (_currentQueueIndex < _testQueue.Count)
         {
             TestConfiguration config = _testQueue[_currentQueueIndex];
@@ -358,6 +369,18 @@ public class SimulationController : MonoBehaviour
             ApplyUnitSorting();
 
             RunBatchTest();
+
+            yield return new WaitForEndOfFrame();
+
+            if (_captureScreenshots)
+            {
+                string bStr = config.Bias.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                string cStr = config.Cap.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                string cleanMapName = _currentScenarioName.Replace(" ", "");
+                string fileName = $"{_screenshotFolder}Test_{_totalTests:D4}_{cleanMapName}_{_currentSortModeName}_B{bStr}_C{cStr}.png";
+
+                ScreenCapture.CaptureScreenshot(fileName);
+            }
 
             _currentQueueIndex++;
             yield return null;
